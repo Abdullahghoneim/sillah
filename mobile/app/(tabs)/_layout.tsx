@@ -1,35 +1,49 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { authClient } from '@/lib/auth-client';
+import { Sidebar } from '@/components/students/Sidebar';
+import { Topbar } from '@/components/students/Topbar';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const PAGE_BG = '#F7FFFF';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  const variant = role === 'STUDENT' ? 'student' : 'teacher';
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.shell}>
+        <Sidebar variant={variant} />
+        <View style={styles.main}>
+          <Topbar />
+          <View style={styles.content}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: PAGE_BG },
+                animation: 'fade',
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="explore" />
+              <Stack.Screen name="students/index" />
+              <Stack.Screen name="students/[studentId]" />
+              <Stack.Screen name="student-home/index" />
+              <Stack.Screen name="profile/index" />
+            </Stack>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  shell: { flex: 1, flexDirection: 'row' },
+  main: { flex: 1, backgroundColor: PAGE_BG },
+  content: { flex: 1, backgroundColor: PAGE_BG },
+});

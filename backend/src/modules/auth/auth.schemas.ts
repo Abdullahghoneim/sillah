@@ -31,6 +31,8 @@ export const updateProfileSchema = z
       .regex(/^[+\d][\d\s\-()]*$/, 'Invalid phone number')
       .optional(),
     role: z.enum(ROLES).optional(),
+    image: z.string().url().max(2048).nullable().optional(),
+    bio: z.string().trim().max(500).nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field is required',

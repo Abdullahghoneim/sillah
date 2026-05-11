@@ -12,6 +12,11 @@ const schema = z.object({
     z.string().url(),
   ),
 
+  APP_URL: z.preprocess(
+    (v) => (v === '' || v === undefined ? 'http://localhost:3000' : v),
+    z.string().url(),
+  ),
+
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().default(1025),
   SMTP_USER: z.string().optional(),

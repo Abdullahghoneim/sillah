@@ -40,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="verify" options={{ headerShown: false }} />
           <Stack.Screen name="select-role" options={{ headerShown: false }} />
+          <Stack.Screen name="invite/accept" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>

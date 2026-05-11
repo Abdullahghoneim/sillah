@@ -10,6 +10,9 @@ build/
 out-tsc/
 *.tsbuildinfo
 
+# Backend user uploads
+backend/uploads/
+
 # Environment
 .env
 .env.local

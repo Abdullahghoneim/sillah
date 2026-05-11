@@ -32,6 +32,7 @@ const userPublicSelect = {
   emailVerified: true,
   image: true,
   phone: true,
+  bio: true,
   role: true,
   createdAt: true,
   updatedAt: true,
@@ -91,9 +92,52 @@ export async function authModuleRoutes(app: FastifyInstance) {
         ...(body.name !== undefined ? { name: body.name } : {}),
         ...(body.phone !== undefined ? { phone: body.phone } : {}),
         ...(body.role !== undefined ? { role: body.role } : {}),
+        ...(body.image !== undefined ? { image: body.image } : {}),
+        ...(body.bio !== undefined
+          ? { bio: body.bio === null ? null : body.bio.trim() || null }
+          : {}),
       },
       select: userPublicSelect,
     })
+
+    if (body.role === 'STUDENT') {
+      const existingProfile = await prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!existingProfile) {
+        const pendingInvite = await prisma.studentInvitation.findFirst({
+          where: {
+            email: user.email,
+            status: 'PENDING',
+            expiresAt: { gt: new Date() },
+          },
+        })
+        if (pendingInvite) {
+          await prisma.$transaction([
+            prisma.studentInvitation.update({
+              where: { id: pendingInvite.id },
+              data: { status: 'ACCEPTED' },
+            }),
+            prisma.student.update({
+              where: { id: pendingInvite.studentId },
+              data: { status: 'ACTIVE', userId: user.id },
+            }),
+          ])
+        } else {
+          await prisma.student.create({
+            data: {
+              name: user.name,
+              email: user.email,
+              status: 'ACTIVE',
+              teacherId: null,
+              userId: user.id,
+            },
+          })
+        }
+      }
+    }
+
     return user
   })
 }

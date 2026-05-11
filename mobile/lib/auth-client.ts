@@ -3,7 +3,7 @@ import { emailOTPClient } from 'better-auth/client/plugins';
 import { expoClient } from '@better-auth/expo/client';
 import * as SecureStore from 'expo-secure-store';
 
-export const API_BASE_URL = 'http://192.168.1.179:3000';
+export const API_BASE_URL = 'http://localhost:3000';
 
 export const authClient = createAuthClient({
   baseURL: API_BASE_URL,

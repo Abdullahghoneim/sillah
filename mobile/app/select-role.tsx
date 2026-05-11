@@ -7,9 +7,13 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { AuthLayout } from '@/components/auth-layout';
 import { API_BASE_URL, authClient } from '@/lib/auth-client';
+import { acceptInviteToken } from '@/lib/students-api';
 import { friendlyAuthError } from '@/lib/validation';
+
+export const PENDING_INVITE_KEY = 'sillah_pending_invite_token';
 
 const COLORS = {
   white: '#FFFFFF',
@@ -56,7 +60,29 @@ export default function SelectRole() {
       if (!res.ok) {
         throw new Error(data?.error ?? `Update failed (${res.status})`);
       }
-      router.replace('/(tabs)');
+      if (selected === 'TEACHER') {
+        router.replace('/(tabs)/students' as never);
+      } else {
+        let pendingToken: string | null = null;
+        try {
+          pendingToken = await SecureStore.getItemAsync(PENDING_INVITE_KEY);
+        } catch {
+          pendingToken = null;
+        }
+        if (pendingToken) {
+          try {
+            await acceptInviteToken(pendingToken);
+          } catch {
+            // ignore — either token expired / already linked by email auto-match
+          }
+          try {
+            await SecureStore.deleteItemAsync(PENDING_INVITE_KEY);
+          } catch {
+            // best-effort cleanup
+          }
+        }
+        router.replace('/(tabs)/student-home' as never);
+      }
     } catch (err) {
       setFormError(friendlyAuthError(err, 'Could not save your role. Try again.'));
     } finally {

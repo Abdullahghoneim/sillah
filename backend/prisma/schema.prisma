@@ -14,12 +14,16 @@ model User {
   emailVerified Boolean   @default(false)
   image         String?
   phone         String?
+  bio           String?
   role          String    @default("STUDENT")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   sessions Session[]
   accounts Account[]
+
+  studentsOwned  Student[] @relation("TeacherStudents")
+  studentProfile Student?  @relation("StudentUser")
 
   @@map("user")
 }
@@ -69,4 +73,77 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Student {
+  id          String        @id @default(cuid())
+  name        String
+  email       String?
+  age         Int?
+  level       Level         @default(BEGINNER)
+  status      StudentStatus @default(INACTIVE)
+  parentEmail String?
+  avatarUrl   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  teacherId String?
+  teacher   User?   @relation("TeacherStudents", fields: [teacherId], references: [id], onDelete: SetNull)
+
+  userId String? @unique
+  user   User?   @relation("StudentUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  invitation StudentInvitation?
+  progress   StudentProgress?
+
+  @@index([teacherId])
+  @@index([email])
+  @@map("student")
+}
+
+model StudentInvitation {
+  id        String       @id @default(cuid())
+  token     String       @unique @default(cuid())
+  email     String
+  status    InviteStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+
+  studentId String  @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+  @@map("student_invitation")
+}
+
+model StudentProgress {
+  id                String   @id @default(cuid())
+  overallProgress   Float    @default(0)
+  attendanceRate    Float    @default(0)
+  lessonsCompleted  Int      @default(0)
+  practiceCompleted Float    @default(0)
+  updatedAt         DateTime @updatedAt
+
+  studentId String  @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("student_progress")
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
 }
